@@ -1,0 +1,70 @@
+
+body {
+    background-color: #aaa;
+    font-family: sans-serif;
+}
+
+.tt {
+    font-family: monospace;
+}
+
+.center {
+    text-align: center;
+}
+
+input[type="number"] {
+    background-color: #bbb;
+}
+
+table.grid {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+table.grid > thead > tr > th,
+table.grid >         tr > th,
+table.grid > tbody > tr > th,
+table.grid >         tr > th,
+table.grid > tbody > tr > td,
+table.grid >         tr > td
+{
+    border: 1px solid black;
+    padding: 3px 5px 3px 5px;
+}
+
+.band-editor-display {
+    display: inline-block;
+    width: 60px;
+}
+
+.band-editor {
+    display: inline-block;
+    padding: 2px;
+    border: 1px solid #000;
+    margin: 2px;
+    width: 60px;
+    cursor: default;
+    text-align: center;
+}
+
+.band-editor-space {
+    display: inline-block;
+    padding: 2px;
+    margin: 2px;
+    width: 62px;
+}
+
+.resistor-value {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.led-voltage-input {
+    width: 4em;
+    text-align: right;
+}
+
+.led-current-input {
+    width: 4em;
+    text-align: right;
+}

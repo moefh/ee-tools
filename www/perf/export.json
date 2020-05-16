@@ -1,0 +1,42 @@
+{
+  "board_w": 40,
+  "board_h": 20,
+  "elements": [
+    {
+      "type": "resistor",
+      "x": 9,
+      "y": 6,
+      "rot": 0,
+      "info": {
+        "val": 10000
+      }
+    },
+    {
+      "type": "resistor",
+      "x": 13,
+      "y": 2,
+      "rot": 90,
+      "info": {
+        "val": 150
+      }
+    },
+    {
+      "type": "resistor",
+      "x": 17,
+      "y": 6,
+      "rot": 180,
+      "info": {
+        "val": 75
+      }
+    },
+    {
+      "type": "resistor",
+      "x": 13,
+      "y": 10,
+      "rot": 270,
+      "info": {
+        "val": 220
+      }
+    }
+  ]
+}

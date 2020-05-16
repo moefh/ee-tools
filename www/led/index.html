@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <title>LED resistor calculator</title>
+</head>
+<body onload="init()">
+<script src="led.js"></script>
+
+<h1>LED resistor calculator</h1>
+
+<table>
+  <tr>
+    <td><b>Supply voltage:</b></td>
+    <td><input id="supply-voltage" type="number" class="led-voltage-input" step="0.1" value="5" min="0" required> V</td>
+    <td>
+      (use
+      <select id="supply-voltage-dropdown">
+        <option value="3.3"        >3.3</option>
+        <option value="5"  selected>5</option>
+        <option value="9"          >9</option>
+        <option value="12"         >12</option>
+      </select>
+      V)
+    </td>
+  </tr>
+  <tr>
+    <td><b>Desired current:</b></td>
+    <td><input id="led-current" type="number" class="led-current-input" step="0.1" value="20" min="0" required> mA</td>
+    <td>
+      (use
+      <select id="led-current-dropdown">
+        <option value="2"          >2</option>
+        <option value="10"         >10</option>
+        <option value="20" selected>20</option>
+      </select>
+      mA)
+    </td>
+  </tr>
+</table>
+
+<p>
+
+<table class="grid" id="led-table">
+  <tr>
+    <th>LED</th>
+    <th>Forward voltage</th>
+    <th>Resistance</th>
+  </tr>
+  <tr>
+    <td></td>
+    <td class="tt center"><input id="custom-led-voltage-input" type="number" class="led-voltage-input" step="0.1" value="3.3" min="0" required> V</td>
+    <td class="tt center"><span id="custom-resistor-value" class="tt"></span> &ohm;</td>
+  </tr>
+</table>
+
+
+
+</body>
+</html>

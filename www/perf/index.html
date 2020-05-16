@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <link rel="stylesheet" type="text/css" href="menu.css">
+  <title>Perfboard Planner</title>
+</head>
+<body>
+<script src="perf.js"></script>
+<script src="resistor.js"></script>
+<script src="led.js"></script>
+<script src="ecap.js"></script>
+<script src="ic.js"></script>
+<script src="header.js"></script>
+<script src="misc.js"></script>
+
+<div id="popup-background"></div>
+
+<div class="menu">
+  <div class="menu-item"><span>File</span>
+    <div class="menu-children">
+      <div class="menu-item"><span onclick="board.menuNew()"        >New</span></div>
+      <div class="menu-item"><span onclick="board.menuOpen()"       >Open</span></div>
+      <div class="menu-item"><span onclick="board.menuSave()"       >Save</span></div>
+      <div class="menu-item menu-sep"></div>
+      <div class="menu-item"><span onclick="board.openImportPopup()">Import</span></div>
+      <div class="menu-item"><span onclick="board.openExportPopup()">Export</span></div>
+    </div>
+  </div>
+  <div class="menu-item"><span>Edit</span>
+    <div class="menu-children">
+      <div class="menu-item"><span onclick="board.menuCut()"                 >Cut</span></div>
+      <div class="menu-item"><span onclick="board.menuCopy()"                >Copy</span></div>
+      <div class="menu-item"><span onclick="board.menuPaste()"               >Paste</span></div>
+      <div class="menu-item menu-sep"></div>
+      <div class="menu-item"><span onclick="board.openBoardConfig(200, 150)" >Board Size</span></div>
+    </div>
+  </div>
+  <div class="menu-item"><span>Help</span>
+    <div class="menu-children">
+      <div class="menu-item"><span onclick="board.openHelpPopup()"                         >Help</span></div>
+      <div class="menu-item menu-sep"></div>
+      <div class="menu-item"><span onclick="board.openPopupWindow('about-popup', 200, 150)">About</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="toolbox"></div>
+
+<div class="board-frame">
+  <canvas id="board" width="10" height="10"></canvas>
+</div>
+
+<div id="debug" style="display: none; float: right; border: 1px solid #000; background-color: #fff; color: #000; white-space: pre; font-family: monospace;">&nbsp;</div>
+
+<div id="popup" style="display: none">
+  <div id="about-popup" style="display: none">
+    <div class="popup-title">Perfboard Planner</div>
+    <div class="popup-text-line">A <i>very</i> simple web-based perfboard planner.</div>
+    <div class="popup-buttons">
+      <button class="popup-button" onclick="board.closePopup()">Close</button>
+    </div>
+  </div>
+  
+  <div id="help-popup" style="display: none">
+    <div class="popup-title">Help and Usage</div>
+    
+    <div id="help-popup-text" class="popup-vert-scroll">
+      <div class="popup-subtitle">
+        Adding Components
+      </div>
+      <div class="popup-text-line">
+        To add a component, click the corresponding icon in the
+        toolbar and click the board at the desired location. The
+        rotation can be selected by pressing the <tt>R</tt> key.
+      </div>
+
+      <div class="popup-subtitle">
+        Selecting Components
+      </div>
+      <div class="popup-text-line">
+        To select a component, click the "Select" tool in the toolbar
+        and click the component.  To select multiple
+        components, <tt>SHIFT</tt>-click each
+        one.  <tt>SHIFT</tt>-clicking a selected component will
+        de-select it.
+      </div>
+
+      <div class="popup-subtitle">
+        Moving Components
+      </div>
+      <div class="popup-text-line">
+        To move a component, drag it to the desired location. If
+        multiple components are selected, they will be moved
+        together. It's not possible to move when one of the components
+        would overlap another component or go outside the borad.
+      </div>
+
+      <div class="popup-subtitle">
+        Editing Components
+      </div>
+      <div class="popup-text-line">
+        To edit the attributes of a component (for example, the value
+        of a resistor), double-click it.
+      </div>
+      <div class="popup-text-line">
+        To rotate a component, select it and pres the <tt>R</tt> key.
+      </div>
+
+      <div class="popup-subtitle">
+        Deleting Components
+      </div>
+      <div class="popup-text-line">
+        To delete a component, select it and press the <tt>DEL</tt> key.
+        If multiple components are selected, all of them will be deleted.
+      </div>
+    </div>
+    
+    <div class="popup-buttons">
+      <button class="popup-button" onclick="board.closePopup()">Close</button>
+    </div>
+  </div>
+  
+  <div id="export-popup" style="display: none">
+    <div class="popup-title">Export Data</div>
+
+    <div class="popup-text-line">
+      Save the text below to import later:
+    </div>
+    
+    <div class="popup-text-line">
+      <textarea id="export-popup-data" rows="8" cols="40"></textarea>
+    </div>
+    
+    <div class="popup-buttons">
+      <button class="popup-button" onclick="board.closePopup()">Close</button>
+    </div>
+  </div>
+
+  <div id="import-popup" style="display: none">
+    <div class="popup-title">Import Data</div>
+
+    <div class="popup-text-line">
+      Paste below a previously exported text:
+    </div>
+
+    <div class="popup-text-line">
+      <textarea id="import-popup-data" rows="8" cols="40"></textarea>
+    </div>
+    
+    <div class="popup-buttons">
+      <button class="popup-button" onclick="board.closePopup()">Cancel</button>
+      <button class="popup-button" onclick="board.confirmImportPopup()">Import</button>
+    </div>
+  </div>
+  
+  <div id="new-board-popup" style="display: none">
+    <div class="config-panel">
+      <div class="config-title">New Board</div>
+      <div class="config-label">Size:</div>
+      <div class="config-value">
+        <input type="text" id="board-new-w" size="3">
+        x
+        <input type="text" id="board-new-h" size="3">
+      </div>
+      <div class="config-buttons">
+        <button class="config-button-ok"     onclick="board.closePopup()">Cancel</button>
+        <button class="config-button-cancel" onclick="board.confirmMenuNew()">OK</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="board-config" style="display: none">
+    <div class="config-panel">
+      <div class="config-title">Board Size</div>
+      <div class="config-label">Size:</div>
+      <div class="config-value">
+        <input type="text" id="board-config-w" size="3" onkeypress="board.keyPressBoardConfig()">
+        x
+        <input type="text" id="board-config-h" size="3" onkeypress="board.keyPressBoardConfig()">
+      </div>
+      <div class="config-buttons">
+        <button class="config-button-ok"     onclick="board.closePopup()">Cancel</button>
+        <button class="config-button-cancel" onclick="board.confirmBoardConfig()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resistor-config" style="display: none">
+    <div class="config-panel">
+      <div class="config-title">Resistor</div>
+      <div class="config-label">Value:</div>
+      <div class="config-value"><input id="resistor-config-value" type="text" size="4" onkeypress="board.configKeyPress()"> Ω</div>
+      <div class="config-label">Rotation:</div>
+      <div class="config-value"><select id="resistor-config-rot"></select> degrees</div>
+      <div class="config-buttons">
+        <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
+        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ic-config" style="display: none">
+    <div class="config-panel">
+      <div class="config-title">Integrated Circuit</div>
+      <div class="config-label">Num Pins:</div>
+      <div class="config-value"><input id="ic-config-npins" type="number" size="2" min="8" max="98" step="2" onkeypress="board.configKeyPress()"></div>
+      <div class="config-label">Name:</div>
+      <div class="config-value"><input id="ic-config-name" type="text" size="10" onkeypress="board.configKeyPress()"></div>
+      <div class="config-label">Rotation:</div>
+      <div class="config-value"><select id="ic-config-rot"></select> degrees</div>
+      <div class="config-buttons">
+        <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
+        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="header-config" style="display: none">
+    <div class="config-panel">
+      <div class="config-title" id="header-config-title">Header</div>
+      <div class="config-label">Length:</div>
+      <div class="config-value"><input id="header-config-sx" type="number" size="2" min="1" max="99" onkeypress="board.configKeyPress()"></div>
+      <div class="config-label">Width:</div>
+      <div class="config-value"><input id="header-config-sy" type="number" size="2" min="1" max="99" onkeypress="board.configKeyPress()"></div>
+      <div class="config-label">Rotation:</div>
+      <div class="config-value"><select id="header-config-rot"></select> degrees</div>
+      <div class="config-buttons">
+        <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
+        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="ecap-config" style="display: none">
+    <div class="config-panel">
+      <div class="config-title" id="ecap-config-title">Electrolytic Capacitor</div>
+      <div class="config-label">Value:</div>
+      <div class="config-value"><input id="ecap-config-value" type="text" size="4" onkeypress="board.configKeyPress()"> F</div>
+      <div class="config-label">Rotation:</div>
+      <div class="config-value"><select id="ecap-config-rot"></select> degrees</div>
+      <div class="config-buttons">
+        <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
+        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="led-config" style="display: none">
+    <div class="config-panel">
+      <div class="config-title">LED</div>
+      <div class="config-label">Size:</div>
+      <div class="config-value">
+        <select id="led-config-size">
+          <option value="1">Small</option>
+          <option value="2">Large</option>
+        </select>
+      </div>
+      <div class="config-label">Color:</div>
+      <div class="config-value">
+        <select id="led-config-color">
+          <option value="red"   >Red</option>
+          <option value="green" >Green</option>
+          <option value="blue"  >Blue</option>
+          <option value="yellow">Yellow</option>
+          <option value="white" >White</option>
+        </select>
+      </div>
+      <div class="config-label">Rotation:</div>
+      <div class="config-value"><select id="led-config-rot"></select> degrees</div>
+      <div class="config-buttons">
+        <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
+        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="other-config" style="display: none">
+    <div class="config-panel">
+      <div class="config-title">Other Component</div>
+      <div class="config-label">Size:</div>
+      <div class="config-value">
+        <input id="other-config-sx" type="number" min="1" max="99" size="3" onkeypress="board.configKeyPress()">
+        x
+        <input id="other-config-sy" type="number" min="1" max="99" size="3" onkeypress="board.configKeyPress()">
+      </div>
+      <div class="config-label">Name:</div>
+      <div class="config-value"><input id="other-config-name" type="text" size="10" onkeypress="board.configKeyPress()"></div>
+      <div class="config-label">Color:</div>
+      <div class="config-value">
+        <select id="other-config-color">
+          <option value="#d00">Red</option>
+          <option value="#dd0">Yellow</option>
+          <option value="#0d0">Green</option>
+          <option value="#0dd">Cyan</option>
+          <option value="#00d">Blue</option>
+          <option value="#d0d">Purple</option>
+          <option value="#dd0">Yellow</option>
+          <option value="#ddd">White</option>
+          <option value="#777">Grey</option>
+          <option value="#000">Black</option>
+        </select>
+      </div>
+      <div class="config-label">Rotation:</div>
+      <div class="config-value"><select id="other-config-rot"></select> degrees</div>
+      <div class="config-buttons">
+        <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
+        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

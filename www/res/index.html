@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <title>Resistor Value Calculator</title>
+  <meta name="author" content="ricardo.massaro@gmail.com">
+</head>
+<body onload="init()">
+  <script src="res.js"></script>
+  
+  <h1>Resistor Value Calculator</h1>
+
+  <div class="resistor-value">
+    Resistor value:
+    <b><span id="resistor-value-resistance">?</span>&ohm;</b>
+    &plusmn;<span id="resistor-value-tolerance"></span>%
+  </div>
+  
+  <div style="position: relative; background: no-repeat url('resistor.png'); width: 1140px; height: 200px;">
+    <div style="position: absolute; left: 200px; top: 5px; color: #444;">0</div>
+    <div style="position: absolute; left: 270px; top: 5px; color: #444;">1</div>
+    <div style="position: absolute; left: 340px; top: 5px; color: #444;">2</div>
+    <div style="position: absolute; left: 410px; top: 5px; color: #444;">3</div>
+    <div style="position: absolute; left: 480px; top: 5px; color: #444;">4</div>
+    <div style="position: absolute; left: 550px; top: 5px; color: #444;">5</div>
+    <div style="position: absolute; left: 620px; top: 5px; color: #444;">6</div>
+    <div style="position: absolute; left: 690px; top: 5px; color: #444;">7</div>
+    <div style="position: absolute; left: 760px; top: 5px; color: #444;">8</div>
+    <div style="position: absolute; left: 830px; top: 5px; color: #444;">9</div>
+    <div style="position: absolute; left: 890px; top: 5px; color: #444;">5%</div>
+    <div style="position: absolute; left: 960px; top: 5px; color: #444;">10%</div>
+    
+    <div id="band0" style="position: absolute; left: 28px; top: 41px;  width: 55px; height: 13px;"></div>
+    <div id="band1" style="position: absolute; left: 33px; top: 69px;  width: 45px; height: 14px;"></div>
+    <div id="band2" style="position: absolute; left: 32px; top: 96px;  width: 46px; height: 13px;"></div>
+    <div id="band3" style="position: absolute; left: 28px; top: 144px; width: 54px; height: 14px;"></div>
+
+    <div id="edit0" style="position: absolute; left: 110px; top: 34px;  "></div>
+    <div id="edit1" style="position: absolute; left: 110px; top: 62px;  "></div>
+    <div id="edit2" style="position: absolute; left: 110px; top: 90px;  "></div>
+    <div id="edit3" style="position: absolute; left: 110px; top: 138px; "></div>
+  </div>
+  
+</body>
+</html>

@@ -1,0 +1,85 @@
+/*
+
+This is some CSS for a simple pure HTML/CSS menu (no javascript required).
+
+Example menu:
+
+<div class="menu">
+  <div class="menu-item"><span>File</span>
+    <div class="menu-children">
+      <div class="menu-item"><span onclick="run_menu_new()"   >New</span></div>
+      <div class="menu-item"><span onclick="run_menu_open()"  >Open</span></div>
+      <div class="menu-item"><span onclick="run_menu_save()"  >Save</span></div>
+      <div class="menu-item menu-sep"></div>
+      <div class="menu-item"><span onclick="run_menu_import()">Import</span></div>
+      <div class="menu-item"><span onclick="run_menu_export()">Export</span></div>
+    </div>
+  </div>
+  <div class="menu-item"><span>Help</span>
+    <div class="menu-children">
+      <div class="menu-item"><span onclick="run_menu_help()()">Help</span></div>
+      <div class="menu-item menu-sep"></div>
+      <div class="menu-item"><span onclick="run_menu_about()" >About</span></div>
+    </div>
+  </div>
+</div>
+
+ */
+
+/*
+body {
+    padding: 0;
+    margin: 0;
+}
+*/
+
+.menu * {
+    cursor: pointer;
+}
+
+.menu {
+    display: flex;
+    border-bottom: 1px solid #000;
+    color: #fff;
+    background-color: #555;
+}
+
+.menu .menu-item {
+    position: relative;
+}
+
+.menu .menu-item.menu-sep {
+    position: relative;
+    border-top: 1px solid #000;
+}
+
+.menu .menu-item > span {
+    display: block;
+    color: #fff;
+    text-decoration: none;
+    padding: 5px 10px;
+}
+
+.menu .menu-item > span:hover {
+    color: #000;
+    background-color: #aaa;
+}
+
+.menu .menu-item > .menu-children {
+    position: absolute;
+    display: none;
+    background-color: #555;
+    margin: 0;
+    padding: 0;
+}
+
+.menu .menu-item:hover > .menu-children {
+    display: block;
+    border: 1px solid #000;
+    box-shadow: 3px 3px 3px rgba(0,0,0, 0.5);
+}
+
+.menu .menu-item > .menu-children > .menu-item {
+    display: block;
+    width:   150px;
+}
