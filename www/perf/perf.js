@@ -25,7 +25,8 @@ class Perfboard {
             'male-header'   : { name: 'male-header',   dom: null, is_element: true, config: new HeaderConfig(this, 'Male Header') },
             'female-header' : { name: 'female-header', dom: null, is_element: true, config: new HeaderConfig(this, 'Female Header') },
             'ic4'           : { name: 'ic4',           dom: null, is_element: true, config: new ICConfig(this,  4, 4, '555') },
-            'ic7'           : { name: 'ic7',           dom: null, is_element: true, config: new ICConfig(this, 12, 7, '28C16') }, 
+            'ic7'           : { name: 'ic7',           dom: null, is_element: true, config: new ICConfig(this, 12, 7, '28C16') },
+            'arduino-nano'  : { name: 'arduino-nano',  dom: null, is_element: true, config: new NoConfig(this, 18, 7, 'Arduino Nano') },
             'other'         : { name: 'other',         dom: null, is_element: true, config: new MiscConfig(this) },
         };
 
@@ -60,8 +61,8 @@ class Perfboard {
         };
 
         this.mask_canvas = document.createElement('canvas');
-        this.mask_canvas.width = 256;
-        this.mask_canvas.height = 256;
+        this.mask_canvas.width = 512;
+        this.mask_canvas.height = 512;
         this.mask_ctx = this.mask_canvas.getContext('2d');
         if (false) {      // for debugging
             this.mask_canvas.style.backgroundColor = '#f0f';
@@ -732,7 +733,10 @@ class Perfboard {
             console.log("don't know how to configure element '" + el.type + "'");
             return;
         }
-        this.element_config.prepareConfig(el, options);
+        if (! this.element_config.prepareConfig(el, options)) {
+            // element has no configuration
+            return;
+        }
         
         this.openPopup(options);
     }
