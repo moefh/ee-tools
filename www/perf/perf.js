@@ -45,7 +45,7 @@ class Perfboard {
         
         this.tool = this.tools.move;
         this.tool_rot = this.ROT_0;
-        this.scale = 1;
+        this.scale = 1.5;
         this.border_w = 0;
         this.border_h = 0;
         this.hole_size = 16;
@@ -69,12 +69,12 @@ class Perfboard {
             document.body.appendChild(this.mask_canvas);
         }
         
-        this.canvas.addEventListener('mousedown',  (e) => { this.mouseDown(e.offsetX, e.offsetY, this.getKeyModifiers(e)); });
-        this.canvas.addEventListener('mouseup',    (e) => { this.mouseUp(e.offsetX, e.offsetY, this.getKeyModifiers(e)); });
-        this.canvas.addEventListener('mousemove',  (e) => { this.mouseMove(e.offsetX, e.offsetY, this.getKeyModifiers(e)); });
+        this.canvas.addEventListener('mousedown',  (e) => { this.mouseDown(e.offsetX/this.scale, e.offsetY/this.scale, this.getKeyModifiers(e)); });
+        this.canvas.addEventListener('mouseup',    (e) => { this.mouseUp(e.offsetX/this.scale, e.offsetY/this.scale, this.getKeyModifiers(e)); });
+        this.canvas.addEventListener('mousemove',  (e) => { this.mouseMove(e.offsetX/this.scale, e.offsetY/this.scale, this.getKeyModifiers(e)); });
         this.canvas.addEventListener('mouseleave', (e) => { this.mouseLeave(this.getKeyModifiers(e)); });
-        this.canvas.addEventListener('click',      (e) => { this.mouseClick(e.offsetX, e.offsetY, this.getKeyModifiers(e)); });
-        this.canvas.addEventListener('dblclick',   (e) => { this.mouseDoubleClick(e.offsetX, e.offsetY, this.getKeyModifiers(e)); });
+        this.canvas.addEventListener('click',      (e) => { this.mouseClick(e.offsetX/this.scale, e.offsetY/this.scale, this.getKeyModifiers(e)); });
+        this.canvas.addEventListener('dblclick',   (e) => { this.mouseDoubleClick(e.offsetX/this.scale, e.offsetY/this.scale, this.getKeyModifiers(e)); });
         document.addEventListener('keydown',       (e) => { this.keyDown(e); });
     }
 
@@ -184,11 +184,17 @@ class Perfboard {
         document.getElementById('debug').textContent = str;
     }
 
-    setSize(w, h) {
+    setSize(w, h, scale) {
         this.board_w = w;
         this.board_h = h;
+        if (scale !== undefined) {
+            this.scale = scale;
+        }
         this.canvas.width  = this.scale * (2*this.border_w + w*this.hole_size);
         this.canvas.height = this.scale * (2*this.border_h + h*this.hole_size);
+        this.ctx.scale(this.scale, this.scale);
+        this.canvas.style.borderWidth = (16*this.scale) + 'px';
+        this.canvas.style.backgroundSize = (16*this.scale)+'px ' + (16*this.scale)+'px';
     }
 
     getHoleAt(x, y) {
@@ -724,8 +730,8 @@ class Perfboard {
     openElementConfig(el) {
         let canvas_pos = this.getCanvasPositionInWindow();
         let options = {
-            popup_x : Math.floor(canvas_pos.x + this.border_w + el.x*this.hole_size + 3*this.hole_size/2),
-            popup_y : Math.floor(canvas_pos.y + this.border_h + el.y*this.hole_size + 3*this.hole_size/2),
+            popup_x : Math.floor(canvas_pos.x + this.scale*(this.border_w + el.x*this.hole_size + 3*this.hole_size/2)),
+            popup_y : Math.floor(canvas_pos.y + this.scale*(this.border_h + el.y*this.hole_size + 3*this.hole_size/2)),
         };
 
         this.element_config = this.tools[el.type].config;

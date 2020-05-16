@@ -55,7 +55,8 @@ table.grid {
 
 #board {
     display: block;
-    border: 16px solid #b5a666;
+    border-style: solid;
+    border-color: #b5a666;
     margin: 0;
     background: url("img/hole.png") repeat;
     background-clip: border-box;
