@@ -5,7 +5,7 @@ class MiscConfig {
         this.board = board;
     }
 
-    getToolName() { return 'User Component';  }
+    getToolName() { return 'Custom Component';  }
 
     getDefaultSize() { return { sx:3, sy:2 }; }
     
