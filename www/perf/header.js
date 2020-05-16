@@ -34,6 +34,7 @@ class HeaderConfig {
         
         options.panel = document.getElementById('header-config');
         options.focus = edit_sx;
+        return true;
     }
 
     handleKeyPress() {
