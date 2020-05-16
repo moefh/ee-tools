@@ -1,9 +1,9 @@
 # ee-tools
 
-This is a collection of small web tools for to help a newbie like me with
-electronics projects.  Every tool is designed to be used in the browser
-with no need of a server (except maybe a web server to serve the static
-files).
+This is a collection of small web tools to help a newbie like me with
+electronics projects.  Each tool is designed to be used in the browser
+with no need of a server, so they can be used locally or with a web server
+serving static pages.
 
 ## Perfboard Planner
 
@@ -21,4 +21,4 @@ A simple tool to calculate resistor values for limiting current to a LED.
 
 [Online Demo](https://moefh.github.io/ee-tools/www/res/)
 
-A simple tool to decode resistor colors.
+A simple tool to decode resistor color bands.
