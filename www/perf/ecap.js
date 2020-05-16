@@ -32,6 +32,7 @@ class ECapConfig {
         
         options.panel = document.getElementById('ecap-config');
         options.focus = edit_value;
+        return true;
     }
 
     confirm() {

@@ -36,6 +36,7 @@ class ICConfig {
         
         options.panel = document.getElementById('ic-config');
         options.focus = edit_npins;
+        return true;
     }
 
     confirm() {

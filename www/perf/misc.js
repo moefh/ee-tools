@@ -5,7 +5,7 @@ class MiscConfig {
         this.board = board;
     }
 
-    getToolName() { return 'Other Component';  }
+    getToolName() { return 'User Component';  }
 
     getDefaultSize() { return { sx:3, sy:2 }; }
     
@@ -39,6 +39,7 @@ class MiscConfig {
         
         options.panel = document.getElementById('other-config');
         options.focus = edit_sx;
+        return true;
     }
 
     confirm() {
@@ -73,6 +74,13 @@ class MiscConfig {
     draw(ctx, el) {
         ctx.fillStyle = (el.info) ? el.info.color : '#000';
         ctx.fillRect(-this.board.hole_size/2, -this.board.hole_size/2, el.sx*this.board.hole_size, el.sy*this.board.hole_size);
+
+        if (! el.info) return;
+        ctx.font = 'bold 14px monospace';
+        ctx.textBaseline = 'middle';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(el.info.name, (el.sx-1)*this.board.hole_size/2, (el.sy-1)*this.board.hole_size/2);
     }
         
 }

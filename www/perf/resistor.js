@@ -29,6 +29,7 @@ class ResistorConfig {
         
         options.panel = document.getElementById('resistor-config');
         options.focus = edit_value;
+        return true;
     }
 
     // return human-readable version of resistor value (e.g. "1000" -> "1K")

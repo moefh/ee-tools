@@ -41,6 +41,7 @@ class LEDConfig {
         
         options.panel = document.getElementById('led-config');
         options.focus = null;
+        return true;
     }
 
     handleKeyPress() {
