@@ -20,6 +20,16 @@ class Perfboard {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
 
+        this.popup_handlers = {
+            'help'         : new PopupHelp(this),
+            'about'        : new PopupAbout(this),
+            'board-config' : new PopupBoardConfig(this),
+            'zoom-config'  : new PopupZoom(this),
+            'menu-new'     : new PopupMenuNew(this),
+            'menu-import'  : new PopupMenuImport(this),
+            'menu-export'  : new PopupMenuExport(this),
+        };
+        
         this.tools = {
             'move'          : { name: 'move',          dom: null, is_element: false, title: 'Select'},
             'resistor'      : { name: 'resistor',      dom: null, is_element: true, config: new ResistorConfig(this) },
@@ -53,7 +63,8 @@ class Perfboard {
         this.border_w = 0;
         this.border_h = 0;
         this.hole_size = 16;
-
+        this.filename = 'perfboard.txt';
+        
         this.elements = [];
         this.floating_element = { type:'none', x:0, y:0, rot:0 };
         this.drag_element = null;
@@ -573,8 +584,136 @@ class Perfboard {
     }
 
     // =================================================================================
-    // === COPY/PASTE ==================================================================
+    // === POPUP WINDOW ================================================================
     // =================================================================================
+
+    openPopup(options) {
+        if (this.popup_is_open) return;
+
+        this.popup_is_open = true;
+        this.clearFloatingElement();
+
+        let popup    = document.getElementById('popup');
+        let popup_bg = document.getElementById('popup-background');
+
+        // display only current panel
+        for (let child of popup.children) child.style.display = 'none';
+        if (options.panel) options.panel.style.display = 'block';
+
+        // set position and enable display
+        if (options.popup_x) {
+            popup.style.left = options.popup_x + 'px';
+            popup.style.top  = options.popup_y + 'px';
+        } else {
+            popup.style.left = '';
+            popup.style.top  = '';
+        }
+        popup.style.display = 'block';
+        popup_bg.style.display = 'block';
+
+        // focus initial element
+        if (options.focus) options.focus.focus();
+    }
+    
+    closePopup() {
+        if (this.popup_is_open) {
+            this.popup_is_open = false;
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('popup-background').style.display = 'none';
+            this.draw();
+        }
+    }
+
+    openPopupWindow(name) {
+        this.popup_handler = this.popup_handlers[name];
+        if (! this.popup_handler) {
+            console.log("popup handler '" + name + "' not found");
+            return;
+        }
+
+        let options = {
+            popup_x : 200,
+            popup_y : 150,
+            focus   : null,
+        };
+        if (! this.popup_handler.prepare(options)) {
+            return;
+        }
+
+        this.openPopup(options);
+    }
+
+    openElementConfigPopup(el) {
+        let canvas_pos = this.getCanvasPositionInWindow();
+        let options = {
+            popup_x : Math.floor(canvas_pos.x + this.scale*(this.border_w + el.x*this.hole_size + 3*this.hole_size/2)),
+            popup_y : Math.floor(canvas_pos.y + this.scale*(this.border_h + el.y*this.hole_size + 3*this.hole_size/2)),
+        };
+
+        this.popup_handler = this.tools[el.type].config;
+        if (! this.popup_handler) {
+            console.log("don't know how to configure element '" + el.type + "'");
+            return;
+        }
+        if (! this.popup_handler.prepareConfig(el, options)) {
+            // element has no configuration
+            return;
+        }
+        
+        this.openPopup(options);
+    }
+
+    popupKeyPress() {
+        this.popup_handler.handleKeyPress();
+    }
+
+    confirmPopup() {
+        this.popup_handler.confirm();
+    }
+    
+    // =================================================================================
+    // === MENU HANDLERS ===============================================================
+    // =================================================================================
+
+    menuNew()       { this.openPopupWindow('menu-new'); }
+    menuImport()    { this.openPopupWindow('menu-import'); }
+    menuExport()    { this.openPopupWindow('menu-export'); }
+    menuBoardSize() { this.openPopupWindow('board-config'); }
+    menuZoom()      { this.openPopupWindow('zoom-config'); }
+    menuHelp()      { this.openPopupWindow('help'); }
+    menuAbout()     { this.openPopupWindow('about'); }
+    
+    menuSave() {
+        let blob = new Blob([ this.exportData() ], { type:'text/plain; charset=utf-8' });
+	let url = window.URL.createObjectURL(blob);
+        let link = document.createElement('a');
+        link.download = this.filename;
+        link.href = url;
+        link.click();        
+	window.URL.revokeObjectURL(url);
+    }
+
+    menuOpen() {
+        let file = document.createElement('input');
+        file.type = 'file';
+        file.name = 'files[]';
+        file.accept = 'text/plain';
+
+        file.onchange = (change_ev) => {
+            let reader = new FileReader();
+            reader.onload = (load_ev) => {
+                if (load_ev.target.readyState != 2) return;
+                if (load_ev.target.error) {
+                    alert('Error reading file');
+                    return;
+                }
+                this.importData(load_ev.target.result);
+                this.filename = change_ev.target.files[0].name;
+            };
+            reader.readAsText(change_ev.target.files[0]);
+        };
+        file.click();
+    }
 
     menuCut() {
         let sel_elements = this.getSelection();
@@ -638,212 +777,8 @@ class Perfboard {
     }
     
     // =================================================================================
-    // === POPUP WINDOW ================================================================
-    // =================================================================================
-
-    openPopupWindow(name, x, y) {
-        let div = document.getElementById(name);
-        if (! div) return;
-        this.openPopup({
-            popup_x : x,
-            popup_y : y,
-            panel   : div,
-        });
-    }    
-    
-    openPopup(options) {
-        if (this.popup_is_open) return;
-
-        this.popup_is_open = true;
-        this.clearFloatingElement();
-
-        let popup    = document.getElementById('popup');
-        let popup_bg = document.getElementById('popup-background');
-
-        // display only current panel
-        for (let child of popup.children) child.style.display = 'none';
-        if (options.panel) options.panel.style.display = 'block';
-
-        // set position and enable display
-        if (options.popup_x) {
-            popup.style.left = options.popup_x + 'px';
-            popup.style.top  = options.popup_y + 'px';
-        } else {
-            popup.style.left = '';
-            popup.style.top  = '';
-        }
-        popup.style.display = 'block';
-        popup_bg.style.display = 'block';
-
-        // focus initial element
-        if (options.focus) options.focus.focus();
-    }
-    
-    closePopup() {
-        if (this.popup_is_open) {
-            this.popup_is_open = false;
-            document.getElementById('popup').style.display = 'none';
-            document.getElementById('popup-background').style.display = 'none';
-            this.draw();
-        }
-    }
-
-    // =================================================================================
-    // === MISC POPUPS =================================================================
-    // =================================================================================
-
-    openHelpPopup() {
-        this.openPopupWindow('help-popup', 200, 150);
-        document.getElementById('help-popup-text').scrollTop = 0;
-    }
-    
-    menuNew() {
-        document.getElementById('board-new-w').value = this.board_w;
-        document.getElementById('board-new-h').value = this.board_h;
-        
-        this.openPopup({
-            popup_x : 200,
-            popup_y : 150,
-            panel   : document.getElementById('new-board-popup'),
-            focus   : null,
-        });
-    }
-
-    confirmMenuNew() {
-        let w = parseInt(document.getElementById('board-new-w').value);
-        let h = parseInt(document.getElementById('board-new-h').value);
-        if (w && h) {
-            this.closePopup();
-            this.setSize(w, h);
-            this.elements = [];
-            this.draw();
-        } else {
-            alert('Invalid size');
-        }
-    }
-    
-    menuSave() {
-        let blob = new Blob([ this.exportData() ], { type:'text/plain; charset=utf-8' });
-	let url = window.URL.createObjectURL(blob);
-        let link = document.createElement('a');
-        link.download = 'perfboard.txt';
-        link.href = url;
-        link.click();        
-	window.URL.revokeObjectURL(url);
-    }
-
-    menuOpen() {
-        let file = document.createElement('input');
-        file.type = 'file';
-        file.name = 'files[]';
-        file.accept = 'text/plain';
-
-        file.onchange = (e) => {
-            let reader = new FileReader();
-            reader.onload = (e) => {
-                if (e.target.readyState != 2) return;
-                if (e.target.error) {
-                    alert('Error reading file');
-                    return;
-                }
-                this.importData(e.target.result);
-            };
-            reader.readAsText(e.target.files[0]);
-        };
-        file.click();
-    }
-
-    openExportPopup() {
-        let export_data = document.getElementById('export-popup-data');
-        export_data.value = this.exportData();
-        export_data.setSelectionRange(0, export_data.value.length);
-        
-        this.openPopup({
-            popup_x : 200,
-            popup_y : 150,
-            panel   : document.getElementById('export-popup'),
-            focus   : export_data,
-        });
-    }
-    
-    openImportPopup() {
-        let import_data = document.getElementById('import-popup-data');
-        import_data.value = '';
-        
-        this.openPopup({
-            popup_x : 200,
-            popup_y : 150,
-            panel   : document.getElementById('import-popup'),
-            focus   : import_data,
-        });
-    }
-
-    confirmImportPopup() {
-        if (this.importData(document.getElementById('import-popup-data').value)) {
-            this.closePopup();
-        }
-    }
-    
-    // =================================================================================
     // === ELEMENT CONFIG ==============================================================
     // =================================================================================
-
-    openElementConfig(el) {
-        let canvas_pos = this.getCanvasPositionInWindow();
-        let options = {
-            popup_x : Math.floor(canvas_pos.x + this.scale*(this.border_w + el.x*this.hole_size + 3*this.hole_size/2)),
-            popup_y : Math.floor(canvas_pos.y + this.scale*(this.border_h + el.y*this.hole_size + 3*this.hole_size/2)),
-        };
-
-        this.element_config = this.tools[el.type].config;
-        if (! this.element_config) {
-            console.log("don't know how to configure element '" + el.type + "'");
-            return;
-        }
-        if (! this.element_config.prepareConfig(el, options)) {
-            // element has no configuration
-            return;
-        }
-        
-        this.openPopup(options);
-    }
-
-    configKeyPress() {
-        this.element_config.handleKeyPress();
-    }
-
-    confirmConfig() {
-        this.element_config.confirm();
-    }
-    
-    openBoardConfig(x, y) {
-        document.getElementById('board-config-w').value = this.board_w;
-        document.getElementById('board-config-h').value = this.board_h;
-        
-        this.openPopup({
-            popup_x : x,
-            popup_y : y,
-            panel   : document.getElementById('board-config'),
-            focus   : null,
-        });
-    }
-
-    keyPressBoardConfig() {
-        switch (event.key) {
-        case 'Enter':  this.confirmBoardConfig(); break;
-        default:       /* console.log(event); */  break;
-        }
-    }
-
-    confirmBoardConfig() {
-        let w = parseInt(document.getElementById('board-config-w').value);
-        let h = parseInt(document.getElementById('board-config-h').value);
-        if (! isNaN(w) && ! isNaN(h)) {
-            this.setSize(w, h);
-            this.draw();
-        }
-        this.closePopup();
-    }
 
     // =================================================================================
     // === EVENT HANDLERS ==============================================================
@@ -1034,7 +969,7 @@ class Perfboard {
         let hole = this.getHoleAt(x, y);
         let el = this.getElementOverHole(hole.x, hole.y);
         if (el) {
-            this.openElementConfig(el);
+            this.openElementConfigPopup(el);
         }
     }
     

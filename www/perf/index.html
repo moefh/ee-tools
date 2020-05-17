@@ -8,6 +8,7 @@
 </head>
 <body>
 <script src="perf.js"></script>
+<script src="popups.js"></script>
 <script src="resistor.js"></script>
 <script src="led.js"></script>
 <script src="ecap.js"></script>
@@ -21,28 +22,29 @@
 <div class="menu">
   <div class="menu-item"><span>File</span>
     <div class="menu-children">
-      <div class="menu-item"><span onclick="board.menuNew()"        >New</span></div>
-      <div class="menu-item"><span onclick="board.menuOpen()"       >Open</span></div>
-      <div class="menu-item"><span onclick="board.menuSave()"       >Save</span></div>
+      <div class="menu-item"><span onclick="board.menuNew()"   >New</span></div>
+      <div class="menu-item"><span onclick="board.menuOpen()"  >Open</span></div>
+      <div class="menu-item"><span onclick="board.menuSave()"  >Save</span></div>
       <div class="menu-item menu-sep"></div>
-      <div class="menu-item"><span onclick="board.openImportPopup()">Import</span></div>
-      <div class="menu-item"><span onclick="board.openExportPopup()">Export</span></div>
+      <div class="menu-item"><span onclick="board.menuImport()">Import</span></div>
+      <div class="menu-item"><span onclick="board.menuExport()">Export</span></div>
     </div>
   </div>
   <div class="menu-item"><span>Edit</span>
     <div class="menu-children">
-      <div class="menu-item"><span onclick="board.menuCut()"                 >Cut</span></div>
-      <div class="menu-item"><span onclick="board.menuCopy()"                >Copy</span></div>
-      <div class="menu-item"><span onclick="board.menuPaste()"               >Paste</span></div>
+      <div class="menu-item"><span onclick="board.menuCut()"   >Cut</span></div>
+      <div class="menu-item"><span onclick="board.menuCopy()"  >Copy</span></div>
+      <div class="menu-item"><span onclick="board.menuPaste()" >Paste</span></div>
       <div class="menu-item menu-sep"></div>
-      <div class="menu-item"><span onclick="board.openBoardConfig(200, 150)" >Board Size</span></div>
+      <div class="menu-item"><span onclick="board.menuBoardSize()">Board Size</span></div>
+      <div class="menu-item"><span onclick="board.menuZoom()"  >Display Zoom</span></div>
     </div>
   </div>
   <div class="menu-item"><span>Help</span>
     <div class="menu-children">
-      <div class="menu-item"><span onclick="board.openHelpPopup()"                         >Help</span></div>
+      <div class="menu-item"><span onclick="board.menuHelp()"  >Help</span></div>
       <div class="menu-item menu-sep"></div>
-      <div class="menu-item"><span onclick="board.openPopupWindow('about-popup', 200, 150)">About</span></div>
+      <div class="menu-item"><span onclick="board.menuAbout()" >About</span></div>
     </div>
   </div>
 </div>
@@ -120,7 +122,7 @@
     
     <div class="popup-buttons">
       <button class="popup-button" onclick="board.closePopup()">Cancel</button>
-      <button class="popup-button" onclick="board.confirmImportPopup()">Import</button>
+      <button class="popup-button" onclick="board.confirmPopup()">Import</button>
     </div>
   </div>
   
@@ -129,13 +131,13 @@
       <div class="config-title">New Board</div>
       <div class="config-label">Size:</div>
       <div class="config-value">
-        <input type="text" id="board-new-w" size="3">
+        <input type="text" id="board-new-w" size="3" onkeypress="board.popupKeyPress()">
         x
-        <input type="text" id="board-new-h" size="3">
+        <input type="text" id="board-new-h" size="3" onkeypress="board.popupKeyPress()">
       </div>
       <div class="config-buttons">
         <button class="config-button-ok"     onclick="board.closePopup()">Cancel</button>
-        <button class="config-button-cancel" onclick="board.confirmMenuNew()">OK</button>
+        <button class="config-button-cancel" onclick="board.confirmPopup()">OK</button>
       </div>
     </div>
   </div>
@@ -145,13 +147,25 @@
       <div class="config-title">Board Size</div>
       <div class="config-label">Size:</div>
       <div class="config-value">
-        <input type="text" id="board-config-w" size="3" onkeypress="board.keyPressBoardConfig()">
+        <input type="text" id="board-config-w" size="3" onkeypress="board.popupKeyPress()">
         x
-        <input type="text" id="board-config-h" size="3" onkeypress="board.keyPressBoardConfig()">
+        <input type="text" id="board-config-h" size="3" onkeypress="board.popupKeyPress()">
       </div>
       <div class="config-buttons">
         <button class="config-button-ok"     onclick="board.closePopup()">Cancel</button>
-        <button class="config-button-cancel" onclick="board.confirmBoardConfig()">OK</button>
+        <button class="config-button-cancel" onclick="board.confirmPopup()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="zoom-config" style="display: none">
+    <div class="config-panel">
+      <div class="config-title">Display Zoom</div>
+      <div class="config-label">Zoom:</div>
+      <div class="config-value"><input type="text" id="zoom-config-zoom" size="3" onkeypress="board.popupKeyPress()"></div>
+      <div class="config-buttons">
+        <button class="config-button-ok"     onclick="board.closePopup()">Cancel</button>
+        <button class="config-button-cancel" onclick="board.confirmPopup()">OK</button>
       </div>
     </div>
   </div>
@@ -160,12 +174,12 @@
     <div class="config-panel">
       <div class="config-title">Resistor</div>
       <div class="config-label">Value:</div>
-      <div class="config-value"><input id="resistor-config-value" type="text" size="4" onkeypress="board.configKeyPress()"> Ω</div>
+      <div class="config-value"><input id="resistor-config-value" type="text" size="4" onkeypress="board.popupKeyPress()"> Ω</div>
       <div class="config-label">Rotation:</div>
       <div class="config-value"><select id="resistor-config-rot"></select> degrees</div>
       <div class="config-buttons">
         <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
-        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+        <button class="config-button-ok"     onclick="board.confirmPopup()">OK</button>
       </div>
     </div>
   </div>
@@ -174,14 +188,14 @@
     <div class="config-panel">
       <div class="config-title">Integrated Circuit</div>
       <div class="config-label">Num Pins:</div>
-      <div class="config-value"><input id="ic-config-npins" type="number" size="2" min="8" max="98" step="2" onkeypress="board.configKeyPress()"></div>
+      <div class="config-value"><input id="ic-config-npins" type="number" size="2" min="8" max="98" step="2" onkeypress="board.popupKeyPress()"></div>
       <div class="config-label">Name:</div>
-      <div class="config-value"><input id="ic-config-name" type="text" size="10" onkeypress="board.configKeyPress()"></div>
+      <div class="config-value"><input id="ic-config-name" type="text" size="10" onkeypress="board.popupKeyPress()"></div>
       <div class="config-label">Rotation:</div>
       <div class="config-value"><select id="ic-config-rot"></select> degrees</div>
       <div class="config-buttons">
         <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
-        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+        <button class="config-button-ok"     onclick="board.confirmPopup()">OK</button>
       </div>
     </div>
   </div>
@@ -190,14 +204,14 @@
     <div class="config-panel">
       <div class="config-title" id="header-config-title">Header</div>
       <div class="config-label">Length:</div>
-      <div class="config-value"><input id="header-config-sx" type="number" size="2" min="1" max="99" onkeypress="board.configKeyPress()"></div>
+      <div class="config-value"><input id="header-config-sx" type="number" size="2" min="1" max="99" onkeypress="board.popupKeyPress()"></div>
       <div class="config-label">Width:</div>
-      <div class="config-value"><input id="header-config-sy" type="number" size="2" min="1" max="99" onkeypress="board.configKeyPress()"></div>
+      <div class="config-value"><input id="header-config-sy" type="number" size="2" min="1" max="99" onkeypress="board.popupKeyPress()"></div>
       <div class="config-label">Rotation:</div>
       <div class="config-value"><select id="header-config-rot"></select> degrees</div>
       <div class="config-buttons">
         <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
-        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+        <button class="config-button-ok"     onclick="board.confirmPopup()">OK</button>
       </div>
     </div>
   </div>
@@ -206,12 +220,12 @@
     <div class="config-panel">
       <div class="config-title" id="ecap-config-title">Electrolytic Capacitor</div>
       <div class="config-label">Value:</div>
-      <div class="config-value"><input id="ecap-config-value" type="text" size="4" onkeypress="board.configKeyPress()"> F</div>
+      <div class="config-value"><input id="ecap-config-value" type="text" size="4" onkeypress="board.popupKeyPress()"> F</div>
       <div class="config-label">Rotation:</div>
       <div class="config-value"><select id="ecap-config-rot"></select> degrees</div>
       <div class="config-buttons">
         <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
-        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+        <button class="config-button-ok"     onclick="board.confirmPopup()">OK</button>
       </div>
     </div>
   </div>
@@ -240,7 +254,7 @@
       <div class="config-value"><select id="led-config-rot"></select> degrees</div>
       <div class="config-buttons">
         <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
-        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+        <button class="config-button-ok"     onclick="board.confirmPopup()">OK</button>
       </div>
     </div>
   </div>
@@ -250,12 +264,12 @@
       <div class="config-title">Custom Component</div>
       <div class="config-label">Size:</div>
       <div class="config-value">
-        <input id="other-config-sx" type="number" min="1" max="99" size="3" onkeypress="board.configKeyPress()">
+        <input id="other-config-sx" type="number" min="1" max="99" size="3" onkeypress="board.popupKeyPress()">
         x
-        <input id="other-config-sy" type="number" min="1" max="99" size="3" onkeypress="board.configKeyPress()">
+        <input id="other-config-sy" type="number" min="1" max="99" size="3" onkeypress="board.popupKeyPress()">
       </div>
       <div class="config-label">Name:</div>
-      <div class="config-value"><input id="other-config-name" type="text" size="10" onkeypress="board.configKeyPress()"></div>
+      <div class="config-value"><input id="other-config-name" type="text" size="10" onkeypress="board.popupKeyPress()"></div>
       <div class="config-label">Color:</div>
       <div class="config-value">
         <select id="other-config-color">
@@ -265,7 +279,6 @@
           <option value="#0dd">Cyan</option>
           <option value="#00d">Blue</option>
           <option value="#d0d">Purple</option>
-          <option value="#dd0">Yellow</option>
           <option value="#ddd">White</option>
           <option value="#777">Grey</option>
           <option value="#000">Black</option>
@@ -275,7 +288,7 @@
       <div class="config-value"><select id="other-config-rot"></select> degrees</div>
       <div class="config-buttons">
         <button class="config-button-cancel" onclick="board.closePopup()">Cancel</button>
-        <button class="config-button-ok"     onclick="board.confirmConfig()">OK</button>
+        <button class="config-button-ok"     onclick="board.confirmPopup()">OK</button>
       </div>
     </div>
   </div>
