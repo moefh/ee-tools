@@ -11,6 +11,10 @@ class Perfboard {
         this.CTRL_KEY  = 2;
         this.ALT_KEY   = 4;
 
+        this.MOUSE_L   = 8;
+        this.MOUSE_R   = 16;
+        this.MOUSE_M   = 32;
+
         this.si_prefixes = [ 'f', 'p', 'n', 'u', 'm', '*', 'K', 'M', 'G', 'T', 'P' ];
         
         this.canvas = canvas;
@@ -59,6 +63,9 @@ class Perfboard {
         this.clipboard = {
             elements: [],
         };
+        this.mouse_down_x = 0;
+        this.mouse_down_y = 0;
+        this.mouse_down_key_mods = 0;
 
         this.mask_canvas = document.createElement('canvas');
         this.mask_canvas.width = 512;
@@ -125,10 +132,24 @@ class Perfboard {
 
     getKeyModifiers(e) {
         let mod = 0;
+
+        // keyboard
         if (e.shiftKey) mod |= this.SHIFT_KEY;
         if (e.ctrlKey)  mod |= this.CTRL_KEY;
         if (e.altKey)   mod |= this.ALT_KEY;
+
+        // mouse
+        if (e.buttons & 1) mod |= this.MOUSE_L;
+        if (e.buttons & 2) mod |= this.MOUSE_R;
+        if (e.buttons & 4) mod |= this.MOUSE_M;
+
         return mod;
+    }
+
+    setMouseDownLocation(x, y, key_mods) {
+        this.mouse_down_x = x;
+        this.mouse_down_y = y;
+        this.mouse_down_key_mods = key_mods;
     }
     
     getCanvasPositionInWindow() {
@@ -195,6 +216,9 @@ class Perfboard {
         this.ctx.scale(this.scale, this.scale);
         this.canvas.style.borderWidth = (16*this.scale) + 'px';
         this.canvas.style.backgroundSize = (16*this.scale)+'px ' + (16*this.scale)+'px';
+
+        this.mask_canvas.width  = this.scale * 512;
+        this.mask_canvas.height = this.scale * 512;
     }
 
     getHoleAt(x, y) {
@@ -204,6 +228,12 @@ class Perfboard {
         };
     }
 
+    clampValue(val, min, max) {
+        if (val < min) return min;
+        if (val > max) return max;
+        return val;
+    }
+    
     clampToBoard(point) {
         if (point.x < 0) point.x = 0;
         if (point.y < 0) point.y = 0;
@@ -263,6 +293,20 @@ class Perfboard {
         this.clearSelection();
         for (el of els) {
             el.selected = true;
+        }
+    }
+
+    selectElementsInRect(x1, y1, x2, y2) {
+        if (x1 > x2) { let t = x1; x1 = x2; x2 = t; }
+        if (y1 > y2) { let t = y1; y1 = y2; y2 = t; }
+
+        let start = this.getHoleAt(x1, y1);
+        let end   = this.getHoleAt(x2, y2);
+        for (let y = start.y; y <= end.y; y++) {
+            for (let x = start.x; x <= end.x; x++) {
+                let el = this.getElementOverHole(x, y);
+                if (el != null) el.selected = true;
+            }
         }
     }
     
@@ -507,6 +551,23 @@ class Perfboard {
         }
     }
 
+    drawSelectionRect(x1, y1, x2, y2) {
+        if (x1 > x2) { let t = x1; x1 = x2; x2 = t; }
+        if (y1 > y2) { let t = y1; y1 = y2; y2 = t; }
+        x1 = this.clampValue(x1, 0, this.hole_size*this.board_w);
+        x2 = this.clampValue(x2, 0, this.hole_size*this.board_w);
+        y1 = this.clampValue(y1, 0, this.hole_size*this.board_h);
+        y2 = this.clampValue(y2, 0, this.hole_size*this.board_h);
+
+        this.ctx.save();
+        this.ctx.strokeStyle = '#fff';
+        this.ctx.strokeRect(x1, y1, x2-x1, y2-y1);
+        this.ctx.globalAlpha = 0.3;
+        this.ctx.fillStyle = '#fff';
+        this.ctx.fillRect(x1, y1, x2-x1, y2-y1);
+        this.ctx.restore();
+    }
+
     setCursor(cursor) {
         this.canvas.style.cursor = cursor;
     }
@@ -592,7 +653,7 @@ class Perfboard {
     
     openPopup(options) {
         if (this.popup_is_open) return;
-        
+
         this.popup_is_open = true;
         this.clearFloatingElement();
 
@@ -789,12 +850,13 @@ class Perfboard {
     // =================================================================================
     
     keyDown(e) {
-        if (this.popup_is_open && e.key == 'Escape') {
-            this.closePopup();
+        if (this.popup_is_open) {
+            if (e.key == 'Escape') {
+                this.closePopup();
+            }
             return;
         }
         
-        //console.log(e);
         switch (e.key) {
         case 'r':
         case 'R':
@@ -828,6 +890,25 @@ class Perfboard {
                 this.draw();
             }
             break;
+
+        case 'X':
+        case 'x':
+            if (e.ctrlKey) this.menuPaste();
+            break;
+            
+        case 'C':
+        case 'c':
+            if (e.ctrlKey) this.menuCopy();
+            break;
+            
+        case 'V':
+        case 'v':
+            if (e.ctrlKey) this.menuPaste();
+            break;
+            
+        default:
+            //console.log(e, e.ctrlKey);
+            break;
         }
     }
 
@@ -843,6 +924,7 @@ class Perfboard {
         switch (this.tool.name) {
         case 'move':
             if (this.drag_element) {
+                // dragging element
                 let must_redraw = false;
                 if (! this.drag_element.selected) {
                     this.clearSelection();
@@ -860,7 +942,12 @@ class Perfboard {
                 if (must_redraw) {
                     this.draw();
                 }
+            } else if (this.mouse_down_key_mods & this.MOUSE_L) {
+                // dragging selection
+                this.draw();
+                this.drawSelectionRect(this.mouse_down_x, this.mouse_down_y, x, y);
             } else {
+                // hovering mouse
                 let hole = this.getHoleAt(x, y);
                 let el = this.getElementOverHole(hole.x, hole.y);
                 this.setCursor((el !== null) ? 'pointer' : 'default');
@@ -882,7 +969,9 @@ class Perfboard {
     mouseUp(x, y, key_mods) {
         if (this.popup_is_open) return;
 
+        
         if (this.drag_element !== null && ! this.drag_element_moved) {
+            // an element was clicked but not moved -- select it
             if (! (key_mods & this.SHIFT_KEY)) {
                 let sel_element = this.getSelectedElement();
                 this.clearSelection();
@@ -891,12 +980,14 @@ class Perfboard {
                 this.drag_element.selected = ! this.drag_element.selected;
             }
             this.draw();
-        } else if (this.drag_element === null) {
-            this.clearSelection();
+        } else if (this.drag_element === null && (this.mouse_down_key_mods & this.MOUSE_L)) {
+            // a rectangle was selected -- select elements inside it
+            this.selectElementsInRect(this.mouse_down_x, this.mouse_down_y, x, y);
         }
         
         this.drag_element = null;
         this.drag_element_moved = false;
+        this.setMouseDownLocation(-1, -1, 0);
         this.draw();
     }
     
@@ -905,6 +996,7 @@ class Perfboard {
 
         switch (this.tool.name) {
         case 'move':
+            this.setMouseDownLocation(x, y, key_mods);
             let hole = this.getHoleAt(x, y);
             let el = this.getElementOverHole(hole.x, hole.y);
             if (el) {
@@ -912,6 +1004,8 @@ class Perfboard {
                 this.drag_element_moved = false;
                 this.drag_x_offset = x-this.border_w - el.x*this.hole_size - this.hole_size/2;
                 this.drag_y_offset = y-this.border_h - el.y*this.hole_size - this.hole_size/2;
+            } else if (! (key_mods & this.SHIFT_KEY)) {
+                this.clearSelection();
             }
             break;
             
