@@ -1,13 +1,15 @@
 
 class ResistorConfig {
 
-    constructor(board) {
+    constructor(board, sx, sy) {
         this.board = board;
+        this.sx = sx;
+        this.sy = sy;
     }
 
     getToolName() { return 'Resistor';  }
 
-    getDefaultSize() { return { sx:4, sy:1 }; }
+    getDefaultSize() { return { sx:this.sx, sy:this.sy }; }
     
     getDefaultInfo() {
         return {
@@ -94,14 +96,16 @@ class ResistorConfig {
     }
 
     draw(ctx, el) {
-        let colors = this.getResistorColors((el.info) ? el.info.val : 1000);
-        ctx.fillStyle = colors[0];
-        ctx.fillRect(11, 2-this.board.hole_size/2, 2, this.board.hole_size-4);
-        ctx.fillRect(13, 3-this.board.hole_size/2, 2, this.board.hole_size-6);
-        ctx.fillStyle = colors[1];
-        ctx.fillRect(18, 4-this.board.hole_size/2, 4, this.board.hole_size-8);
-        ctx.fillStyle = colors[2];
-        ctx.fillRect(25, 4-this.board.hole_size/2, 4, this.board.hole_size-8);
+        if (this.sx == 4) {
+            let colors = this.getResistorColors((el.info) ? el.info.val : 1000);
+            ctx.fillStyle = colors[0];
+            ctx.fillRect(11, 2-this.board.hole_size/2, 2, this.board.hole_size-4);
+            ctx.fillRect(13, 3-this.board.hole_size/2, 2, this.board.hole_size-6);
+            ctx.fillStyle = colors[1];
+            ctx.fillRect(18, 4-this.board.hole_size/2, 4, this.board.hole_size-8);
+            ctx.fillStyle = colors[2];
+            ctx.fillRect(25, 4-this.board.hole_size/2, 4, this.board.hole_size-8);
+        }
     }
         
 }

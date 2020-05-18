@@ -32,7 +32,8 @@ class Perfboard {
         
         this.tools = {
             'move'          : { name: 'move',          dom: null, is_element: false, title: 'Select'},
-            'resistor'      : { name: 'resistor',      dom: null, is_element: true, config: new ResistorConfig(this) },
+            'resistor'      : { name: 'resistor',      dom: null, is_element: true, config: new ResistorConfig(this, 4, 1) },
+            'resistor-tall' : { name: 'resistor-tall', dom: null, is_element: true, config: new ResistorConfig(this, 2, 1) },
             'led'           : { name: 'led',           dom: null, is_element: true, config: new LEDConfig(this) }, 
             'ecap-small'    : { name: 'ecap-small',    dom: null, is_element: true, config: new ECapConfig(this, 2, 1) },
             'ecap-big'      : { name: 'ecap-big',      dom: null, is_element: true, config: new ECapConfig(this, 2, 2) },
